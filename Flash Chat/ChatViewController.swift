@@ -9,7 +9,8 @@
 import UIKit
 import Firebase
 
-class ChatViewController: UIViewController {
+class ChatViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
+    
     
     // Declare instance variables here
 
@@ -26,7 +27,8 @@ class ChatViewController: UIViewController {
         super.viewDidLoad()
         
         //TODO: Set yourself as the delegate and datasource here:
-        
+        messageTableView.delegate = self
+        messageTableView.dataSource = self
         
         
         //TODO: Set yourself as the delegate of the text field here:
@@ -39,20 +41,31 @@ class ChatViewController: UIViewController {
 
         //TODO: Register your MessageCell.xib file here:
 
-        
+        messageTableView.register(UINib(nibName: "MessageCell", bundle: nil), forCellReuseIdentifier: "customMessageCell")
+        configureTableView()
     }
 
     ///////////////////////////////////////////
     
     //MARK: - TableView DataSource Methods
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "customMessageCell", for: indexPath) as! CustomMessageCell
+        
+        let messageArray = ["First Message", "Second Message", "Third Message"]
+        
+        cell.messageBody.text =  messageArray[indexPath.row % 3]
+        
+        return cell
+        
+    }
+    
+    //TODO: Declare cellForRowAtIndexPath here: Return the number of rows you want
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return 3;
+    }
     
     
-    
-    //TODO: Declare cellForRowAtIndexPath here:
-    
-    
-    
-    //TODO: Declare numberOfRowsInSection here:
+    //TODO: Declare numberOfRowsInSection here: Return the number of sections the Table View should be divided in
     
     
     
@@ -60,13 +73,16 @@ class ChatViewController: UIViewController {
     
     
     
-    //TODO: Declare configureTableView here:
-    
+    //TODO: Declare configureTableView here: Fix up UI of cells if required
+    func configureTableView () {
+        messageTableView.rowHeight = UITableView.automaticDimension
+        messageTableView.estimatedRowHeight = 120.0
+    }
     
     
     ///////////////////////////////////////////
     
-    //MARK:- TextField Delegate Methods
+    //MARK:- TextField Delegate Methods 
     
     
 
