@@ -13,7 +13,7 @@ class ChatViewController: UIViewController, UITableViewDelegate, UITableViewData
     
     
     // Declare instance variables here
-
+    var messageArray : [Message] = [Message]() // creating empty arrays
     
     // We've pre-linked the IBOutlets
     @IBOutlet var heightConstraint: NSLayoutConstraint!
@@ -43,6 +43,7 @@ class ChatViewController: UIViewController, UITableViewDelegate, UITableViewData
 
         messageTableView.register(UINib(nibName: "MessageCell", bundle: nil), forCellReuseIdentifier: "customMessageCell")
         configureTableView()
+        retrieveMessages()
     }
 
     ///////////////////////////////////////////
@@ -51,9 +52,9 @@ class ChatViewController: UIViewController, UITableViewDelegate, UITableViewData
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "customMessageCell", for: indexPath) as! CustomMessageCell
         
-        let messageArray = ["First Message", "Second Message", "Third Message"]
-        
-        cell.messageBody.text =  messageArray[indexPath.row % 3]
+        cell.messageBody.text =  messageArray[indexPath.row].messageBody
+        cell.senderUsername.text = messageArray[indexPath.row].sender
+        cell.avatarImageView.image = UIImage(named: "egg")
         
         return cell
         
@@ -61,7 +62,7 @@ class ChatViewController: UIViewController, UITableViewDelegate, UITableViewData
     
     //TODO: Declare cellForRowAtIndexPath here: Return the number of rows you want
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 3;
+        return messageArray.count;
     }
     
     
@@ -116,14 +117,54 @@ class ChatViewController: UIViewController, UITableViewDelegate, UITableViewData
     
     @IBAction func sendPressed(_ sender: AnyObject) {
         
+        messageTextfield.endEditing(true)
         
         //TODO: Send the message to Firebase and save it in our database
+        messageTextfield.isEnabled = false
+        sendButton.isEnabled = false
         
+        let messagesDb = Database.database().reference().child("Messages")
+        
+        let messageDictionary = ["Sender" : Auth.auth().currentUser?.email ,
+                                 "MessageBody" : messageTextfield.text!]
+        messagesDb.childByAutoId().setValue(messageDictionary) {
+            (error, reference) in
+            if error != nil {
+                print(error!)
+            } else {
+                print("Message saved successfully")
+                self.messageTextfield.text = ""
+            }
+            self.messageTextfield.isEnabled = true
+            self.sendButton.isEnabled = true
+        }
         
     }
     
     //TODO: Create the retrieveMessages method here:
-    
+    func retrieveMessages() {
+        
+        let messageDB = Database.database().reference().child("Messages")
+        
+        /*let messageDictionary = ["Sender": Auth.auth().currentUser?.email,
+                                 "MessageBody": messageTextfield.text!]*/
+        
+        messageDB.observe(.childAdded) { (snapshot) in
+            let snapshotValue = snapshot.value as! Dictionary<String, String>
+            
+            let text = snapshotValue["MessageBody"]!
+            let sender = snapshotValue["Sender"]!
+            
+            let message : Message = Message()
+            message.messageBody = text
+            message.sender = sender
+            
+            self.messageArray.append(message)
+            
+            self.configureTableView()
+            self.messageTableView.reloadData()
+        }
+    }
     
 
     
